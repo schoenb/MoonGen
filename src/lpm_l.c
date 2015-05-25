@@ -312,6 +312,53 @@ mg_table_lpm_entry_delete(
 	return 0;
 }
 
+int mg_table_lpm_lookup_single(
+    void *table,
+    struct rte_mbuf *pkt,
+    void ** entry)
+{
+  struct rte_table_lpm *lpm = (struct rte_table_lpm *) table;
+
+  uint32_t ip = rte_bswap32( *((uint32_t*)(pkt->buf_addr + lpm->offset)) );
+  int status;
+  uint8_t nht_pos;
+  status = rte_lpm_lookup(lpm->lpm, ip, &nht_pos);
+  entry[0] = (void *) &lpm->nht[nht_pos * lpm->entry_size];
+  return status;
+}
+
+int mg_table_lpm_lookup_burst_lists(
+	void *table,
+	struct array_list *arr_in,
+	struct array_list *arr_routed,
+	struct array_list *arr_not routed,
+	struct array_list *arr_entries)
+{
+	struct rte_table_lpm *lpm = (struct rte_table_lpm *) table;
+	struct rte_mbuf **pkts_in = arr_in->array;
+	struct rte_mbuf **pkts_routed = arr_in->array;
+	struct rte_mbuf **pkts_not_routed = arr_in->array;
+
+  for(i = 0; i < arr_in->len; i++){
+    struct rte_mbuf *pkt = pkts_in[i];
+    uint32_t ip = rte_bswap32( *((uint32_t*)(pkt->buf_addr + lpm->offset)) );
+    int status;
+    uint8_t nht_pos;
+    status = rte_lpm_lookup(lpm->lpm, ip, &nht_pos);
+    if (status == 0) {
+      arr_entries[arr_routed->len] = (void *) &lpm->nht[nht_pos *
+        lpm->entry_size];
+      arr_routed->array[arr_routed->len] = pkt;
+      arr_routed->len++;
+    }else{
+      arr_not_routed->array[arr_not_routed->len] = pkt;
+      arr_not_routed->len++;
+    }
+  }
+  arr_entries->len = arr_routed->len;
+  return 0;
+}
+
 int mg_table_lpm_lookup_big_burst(
 	void *table,
 	struct rte_mbuf **pkts,

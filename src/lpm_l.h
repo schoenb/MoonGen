@@ -93,6 +93,11 @@ struct rte_table_lpm_params {
 	uint32_t offset;
 };
 
+struct array_list {
+  uint16_t len;
+  void ** array;
+}
+
 
 void *
 mg_table_lpm_create(void *params, int socket_id, uint32_t entry_size);
