@@ -46,6 +46,7 @@ local function parseCommandLineArgs(...)
 end
 
 local function master(_, file, ...)
+  printf("master <<<<")
 	MOONGEN_TASK_NAME = "master"
 	if not dpdk.init() then
 		print("Could not initialize DPDK")
@@ -66,6 +67,7 @@ local function master(_, file, ...)
 end
 
 local function slave(taskId, userscript, args)
+  printf("slave <<<<")
 	-- must be done before parsing the args as they might rely on deserializers defined in the script
 	run(userscript)
 	args = loadstring(args)()
@@ -94,6 +96,13 @@ local function slave(taskId, userscript, args)
 	end
 	--require("jit.p").stop()
 end
+
+local function test(taskId, userscript, args)
+  while true do
+    printf("asd")
+  end
+end
+
 
 function main(task, ...)
 	(task == "master" and master or slave)(...)

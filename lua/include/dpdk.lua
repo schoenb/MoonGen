@@ -173,6 +173,31 @@ function mod.launchLuaOnCore(core, ...)
 	return task
 end
 
+ffi.cdef[[
+void launch_lua_thread(uint64_t task_id, char* userscript, char* args);
+]]
+function mod.launchLuaThread(...)
+  printf("a")
+	checkCore()
+  printf("b")
+	local args = serpent.dump({ ... })
+  printf("c")
+	local task = task:new(0)
+  printf("d")
+	local buf = ffi.new("char[?]", #args + 1)
+  printf("e")
+	ffi.copy(buf, args)
+  printf("f")
+	local userscript = ffi.new("char[?]", #mod.userScript + 1)
+  printf("g")
+	ffi.copy(userscript, mod.userScript)
+  printf("h")
+  printf("script = %s, buf = %s", userscript, buf)
+  ffi.C.launch_lua_thread(task.id, userscript, buf)
+  printf("i")
+	return task
+end
+
 --- launches the lua file on the first free core
 function mod.launchLua(...)
 	checkCore() 
